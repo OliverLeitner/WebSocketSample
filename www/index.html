@@ -1,0 +1,92 @@
+<!doctype html>
+<style>
+    textarea { vertical-align: bottom; }
+    #output { overflow: auto; }
+    #output > p { overflow-wrap: break-word; }
+    #output span { color: blue; }
+    #output span.error { color: red; }
+</style>
+<h2>WebSocket Test (one commnand so far: RANMA)</h2>
+<textarea cols=60 rows=6></textarea>
+<button id="open">open</button>
+<button id="send">send</button>
+<!--<button id="close">close</button>-->
+<div id=output></div>
+<script>
+    // http://www.websocket.org/echo.html
+
+    var button = document.querySelector("button#send"),
+        close = document.querySelector("button#close"),
+        open = document.querySelector("button#open"),
+        output = document.querySelector("#output"),
+        textarea = document.querySelector("textarea"),
+        // wsUri = "ws://echo.websocket.org/",
+        wsUri = "ws://127.0.0.1:11000/alpha",
+        isOpen = false,
+        websocket = new WebSocket(wsUri);
+
+    button.addEventListener("click", onClickButton);
+    // close.addEventListener("click", onCloseButton);
+    open.addEventListener("click", onOpenButton);
+
+    websocket.onopen = function (e) {
+        isOpen = true;
+        writeToScreen("CONNECTED");
+    };
+
+    websocket.onclose = function (e) {
+        isOpen = false;
+        writeToScreen("DISCONNECTED");
+    };
+
+    websocket.onmessage = function (e) {
+        if (!JSON.parse(e.data)[0].message) {
+            data = JSON.parse(e.data);
+            for (let item in data) {
+                writeToScreen("<span>RESPONSE: " + data[item].CompanyName + "</span>");
+            }
+        } else {
+            writeToScreen("<span>RESPONSE: " + JSON.parse(e.data)[0].message + "</span>");
+        }
+    };
+
+    websocket.onerror = function (e) {
+        writeToScreen("<span class=error>ERROR:</span> " + e.Data);
+        isOpen = false;
+        websocket.close();
+    };
+
+    function doSend(message) {
+        writeToScreen("SENT: " + message);
+        websocket.send(message);
+    }
+
+    function writeToScreen(message) {
+        // output.insertAdjacentHTML("afterbegin", "<p>" + message + "</p>");
+        var e = document.createElement('p');
+        e.innerHTML = "<p>" + message + "</p>";
+        output.appendChild(e);
+    }
+
+    function onClickButton() {
+        var text = textarea.value;
+
+        text && doSend(text);
+        textarea.value = "";
+        textarea.focus();
+    }
+
+    function onCloseButton() {
+        if (isOpen) {
+            websocket.close();
+            console.log("disconnected");
+        }
+    }
+
+    function onOpenButton() {
+        if (!isOpen) {
+            websocket = new WebSocket(wsUri);
+            console.log("connected");
+        }
+    }
+</script>

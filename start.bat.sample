@@ -1,0 +1,5 @@
+@set USER="your user"
+@set PASSWORD="your password"
+@set HOST="host"
+@set DATABASE="databasename"
+bin\Release\websocket.exe
